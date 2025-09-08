@@ -1,8 +1,9 @@
-import { ConflictException, Inject, Injectable } from "@nestjs/common";
-import { DrizzleQueryError } from "drizzle-orm";
+import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { DrizzleQueryError, eq, SQL } from "drizzle-orm";
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { DatabaseError } from "pg";
 import { CreateCategoryDto } from "@/categories/dto/create-category.dto";
+import { UpdateCategoryDto } from "@/categories/dto/update-category.dto";
 import { Category } from "@/categories/entities/category.entity";
 import { handleUniqueKeyError } from "@/common/utils/exceptions/handle-unique-key";
 import { DATABASE_CONNECTION } from "@/database/database.module";
@@ -34,5 +35,34 @@ export class CategoriesService {
 
 	async findAll(): Promise<Category[]> {
 		return await this.categoriesRepo.query.categories.findMany();
+	}
+
+	async findOne(id: string) {
+		const category = await this.categoriesRepo.query.categories.findFirst({
+			where: eq(categoriesSchema.categories.id, id),
+		});
+
+		if (category) return category;
+
+		throw new NotFoundException("Category not found!");
+	}
+
+	async update(id: string, updateCategoryDto: UpdateCategoryDto) {
+		const category = await this.categoriesRepo.query.categories.findFirst({
+			where: eq(categoriesSchema.categories.id, id),
+		});
+
+		if (!category) throw new NotFoundException("Category not found!");
+
+		// This is key for partial updte in JS-TS
+		const updateData = Object.fromEntries(
+			Object.entries(updateCategoryDto).filter(([_, value]) => value !== undefined),
+		);
+
+		return await this.categoriesRepo
+			.update(categoriesSchema.categories)
+			.set(updateData)
+			.where(eq(categoriesSchema.categories.id, id))
+			.returning();
 	}
 }
