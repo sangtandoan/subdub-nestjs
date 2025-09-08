@@ -1,11 +1,15 @@
-import { ValidationPipe } from "@nestjs/common";
+import { ConsoleLogger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { HttpExceptionFilter } from "@/common/filters/http-exception.filter";
 import { SnakeCaseInterceptor } from "@/common/interceptors/snake-case.interceptor";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+	const app = await NestFactory.create(AppModule, {
+		logger: new ConsoleLogger({
+			colors: true,
+		}),
+	});
 	// app.useGlobalInterceptors(new SnakeCaseInterceptor());
 	// app.useGlobalInterceptors(new CamelCaseInterceptor());
 	//
