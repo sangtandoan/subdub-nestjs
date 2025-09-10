@@ -1,3 +1,5 @@
+GET {{HOST}}/users
+
 POST {{HOST}}/users
 
 {
